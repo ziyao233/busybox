@@ -2615,11 +2615,14 @@ static int awk_sub(node *rn, const char *repl, int nm, var *src, var *dest /*,in
 			const char *s;
 			int bslash;
 
+			printf("XXX: reach the if, repl = %s\n", repl);
+
 			/* replace */
 			residx -= (eo - so);
 			bslash = 0;
 			for (s = repl; *s; s++) {
 				char c = *s;
+				printf("parse char %d ('%c')\n", c, c);
 				if (c == '\\' && s[1]) {
 					bslash ^= 1;
 					if (bslash)
@@ -2636,8 +2639,12 @@ static int awk_sub(node *rn, const char *repl, int nm, var *src, var *dest /*,in
 					resbuf = qrealloc(resbuf, residx + replen + n, &resbufsize);
 					memcpy(resbuf + residx, sp + pmatch[j].rm_so - start_ofs, n);
 					residx += n;
-				} else
+					printf("XXX:reach here\n");
+				} else {
 					resbuf[residx++] = c;
+					printf("normal write %d ('%c') to resbuf\n",
+					       c, c);
+				}
 				bslash = 0;
 			}
 		}
@@ -2653,6 +2660,7 @@ static int awk_sub(node *rn, const char *repl, int nm, var *src, var *dest /*,in
 			resbuf[residx] = *sp;
 			if (*sp == '\0')
 				goto ret;
+			printf("XXX: advance a char\n");
 			sp++;
 			residx++;
 		}
