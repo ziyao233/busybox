@@ -2641,6 +2641,8 @@ static int awk_sub(node *rn, const char *repl, int nm, var *src, var *dest /*,in
 					residx += n;
 					printf("XXX:reach here\n");
 				} else {
+					if (bslash)
+						resbuf[residx++] = '\\';
 					resbuf[residx++] = c;
 					printf("normal write %d ('%c') to resbuf\n",
 					       c, c);
