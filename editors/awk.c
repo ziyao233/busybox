@@ -2637,7 +2637,9 @@ static int awk_sub(node *rn, const char *repl, int nm, var *src, var *dest /*,in
 					memcpy(resbuf + residx, sp + pmatch[j].rm_so - start_ofs, n);
 					residx += n;
 				} else {
-					if (bslash)
+/* '\\' and '&' following a backslash keep its original meaning, any other
+ * occurrence of a '\\' should be treated as literal */
+					if (bslash && c != '\\' && c != '&')
 						resbuf[residx++] = '\\';
 					resbuf[residx++] = c;
 				}

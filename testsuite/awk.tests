@@ -617,4 +617,9 @@ testing 'awk gsub erroneous word start match' \
 	'abc\n' \
 	'' ''
 
+testing 'awk sub literal backslash in replacement' \
+	'awk '$sq'sub(/abc/, "\\\d")'$sq \
+	'\d\n' \
+	'' 'abc\n'
+
 exit $FAILCOUNT
