@@ -8,12 +8,18 @@
  */
 #include "libbb.h"
 
+#if defined(ENABLE_SHA256_HWACCEL) && defined(__aarch64__)
+# include <sys/auxv.h>
+#endif
+
 #define STR1(s) #s
 #define STR(s) STR1(s)
 
 #define NEED_SHA512 (ENABLE_SHA512SUM || ENABLE_USE_BB_CRYPT_SHA)
 
 #if ENABLE_SHA1_HWACCEL || ENABLE_SHA256_HWACCEL
+void FAST_FUNC sha1_process_block64_shaNI(sha1_ctx_t *ctx);
+void FAST_FUNC sha256_process_block64_shaNI(sha256_ctx_t *ctx);
 # if defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
 static void cpuid_eax_ebx_ecx(unsigned *eax, unsigned *ebx, unsigned *ecx, unsigned *edx)
 {
@@ -41,12 +47,10 @@ static NOINLINE int get_shaNI(void)
 	shaNI = (int)ebx;
 	return (int)ebx;
 }
-void FAST_FUNC sha1_process_block64_shaNI(sha1_ctx_t *ctx);
-void FAST_FUNC sha256_process_block64_shaNI(sha256_ctx_t *ctx);
 #  if defined(__i386__)
 struct ASM_expects_76_shaNI { char t[1 - 2*(offsetof(sha256_ctx_t, hash) != 76)]; };
 #  endif
-#  if defined(__x86_64__)
+#  if defined(__x86_64__) || defined(__aarch64__)
 struct ASM_expects_80_shaNI { char t[1 - 2*(offsetof(sha256_ctx_t, hash) != 80)]; };
 #  endif
 # endif
@@ -1249,6 +1253,11 @@ void FAST_FUNC sha256_begin(sha256_ctx_t *ctx)
 		if (!ni)
 			ni = get_shaNI();
 		if (ni > 0)
+			ctx->process_block = sha256_process_block64_shaNI;
+	}
+# elif defined(__GNUC__) && defined(__aarch64__)
+	{
+		if (getauxval(AT_HWCAP) & HWCAP_SHA2)
 			ctx->process_block = sha256_process_block64_shaNI;
 	}
 # endif
